@@ -1,0 +1,4 @@
+name: zmk-autoswitch
+build:
+  cmake: .
+  kconfig: Kconfig

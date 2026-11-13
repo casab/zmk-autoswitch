@@ -1,0 +1,39 @@
+# Compile check: builds a test keyboard (nice!nano + Reviung41 + raw_hid_adapter) against ZMK main
+# with the module enabled.
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  zmk:
+    runs-on: ubuntu-latest
+    container: zmkfirmware/zmk-build-arm:stable
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache the west workspace
+        uses: actions/cache@v4
+        with:
+          path: |
+            .zmk-ws/modules
+            .zmk-ws/tools
+            .zmk-ws/zephyr
+            .zmk-ws/zmk
+            .zmk-ws/zmk-raw-hid
+            .zmk-ws/.west
+          key: zmk-ws-${{ hashFiles('ci/config/west.yml') }}
+          restore-keys: zmk-ws-
+
+      - name: Build
+        run: bash ci/build.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zmk-autoswitch-test
+          path: |
+            out/*.uf2
+            out/build.log
