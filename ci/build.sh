@@ -24,7 +24,10 @@ west build -s zmk/app -d build -b "${BOARD:-nice_nano//zmk}" -p -- \
   "-DSHIELD=${SHIELDS:-reviung41 raw_hid_adapter}" \
   -DZMK_EXTRA_MODULES="$repo" > "$out/build.log" 2>&1 || { tail -60 "$out/build.log"; exit 1; }
 grep -q 'zmk-autoswitch.*autoswitch.c.obj' "$out/build.log" || { echo "the AutoSwitch module wasn't compiled (CONFIG_ZMK_AUTOSWITCH off?)"; exit 1; }
-grep -E 'autoswitch.*(warning|error)' "$out/build.log" && { echo "warnings in the AutoSwitch module"; exit 1; }
+# Compiler diagnostics in the module's own source only (paths may contain "autoswitch" too).
+if grep -E 'src/autoswitch\.c:[0-9]+:[0-9]+: (warning|error):' "$out/build.log"; then
+  echo "warnings in the AutoSwitch module"; exit 1
+fi
 tail -6 "$out/build.log"
 cp build/zephyr/zmk.uf2 "$out/zmk-autoswitch-test.uf2"
 echo "UF2: $out/zmk-autoswitch-test.uf2"
