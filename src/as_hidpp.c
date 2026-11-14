@@ -113,18 +113,26 @@ struct as_v1_mark {
 static struct as_v1_mark v1_marks[AS_HOSTS];
 static bool hosts_loaded, v1_loaded;
 
+/* Host data is only written after a host changed it (setCookie, setHostFriendlyName), never
+ * while settings load at boot: 2.0's first build saved from the settings commit and the keyboard
+ * didn't start. The delay folds a cookie and a name written together into one flash write. */
+#define AS_SAVE_DELAY K_SECONDS(1)
+
 static void save_work_handler(struct k_work *work) {
     int err = settings_save_one("autoswitch/hosts", hosts, sizeof(hosts));
     if (err < 0) {
         LOG_ERR("AutoSwitch: saving host data failed: %d", err);
+        return;
     }
     if (v1_loaded) {
-        settings_delete("autoswitch/marks");
+        settings_delete("autoswitch/marks"); /* migrated into the data just saved */
         v1_loaded = false;
     }
 }
 
-static K_WORK_DEFINE(save_work, save_work_handler);
+static K_WORK_DELAYABLE_DEFINE(save_work, save_work_handler);
+
+static void schedule_save(void) { k_work_reschedule(&save_work, AS_SAVE_DELAY); }
 
 static int as_settings_set(const char *name, size_t len, settings_read_cb read_cb, void *cb_arg) {
     const char *next;
@@ -147,16 +155,15 @@ static int as_settings_set(const char *name, size_t len, settings_read_cb read_c
     return -ENOENT;
 }
 
+/* In memory only: nothing is written or scheduled while settings load. The migrated cookies are
+ * saved (and the 1.x key deleted) with the first change a host makes. */
 static int as_settings_commit(void) {
-    if (v1_loaded) {
-        if (!hosts_loaded) {
-            for (int i = 0; i < AS_HOSTS; i++) {
-                bt_addr_le_copy(&hosts[i].addr, &v1_marks[i].addr);
-                hosts[i].cookie = v1_marks[i].value;
-            }
-            LOG_INF("AutoSwitch: kept the marks from module 1.x as cookies");
+    if (v1_loaded && !hosts_loaded) {
+        for (int i = 0; i < AS_HOSTS; i++) {
+            bt_addr_le_copy(&hosts[i].addr, &v1_marks[i].addr);
+            hosts[i].cookie = v1_marks[i].value;
         }
-        k_work_submit(&save_work);
+        hosts_loaded = true; /* a later commit (settings_load_subtree) doesn't redo it */
     }
     return 0;
 }
@@ -315,7 +322,7 @@ static uint8_t change_host(uint8_t fn, const uint8_t *p, uint8_t *out) {
         }
         if (e->cookie != p[1]) {
             e->cookie = p[1];
-            k_work_submit(&save_work);
+            schedule_save();
         }
         return ERR_NONE;
     }
@@ -377,7 +384,7 @@ static uint8_t hosts_info(uint8_t fn, const uint8_t *p, uint8_t *out) {
         if (e->name_len != offset + n || memcmp(e->name, name, sizeof(name)) != 0) {
             memcpy(e->name, name, sizeof(name));
             e->name_len = offset + n;
-            k_work_submit(&save_work);
+            schedule_save();
         }
         out[0] = h;
         out[1] = offset;

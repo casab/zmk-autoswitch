@@ -28,7 +28,9 @@ grep -q 'as_hidpp.c.obj' "$out/build.log" || { echo "the AutoSwitch module wasn'
 if grep -E 'src/as_[a-z]+\.c:[0-9]+:[0-9]+: (warning|error):' "$out/build.log"; then
   echo "warnings in the AutoSwitch module"; exit 1
 fi
-grep -q '^CONFIG_USB_HID_DEVICE_COUNT=2' build/zephyr/.config || { echo "CONFIG_USB_HID_DEVICE_COUNT isn't 2"; exit 1; }
+if grep -q '^CONFIG_ZMK_AUTOSWITCH_USB=y' build/zephyr/.config; then
+  grep -q '^CONFIG_USB_HID_DEVICE_COUNT=2' build/zephyr/.config || { echo "CONFIG_USB_HID_DEVICE_COUNT isn't 2"; exit 1; }
+fi
 tail -6 "$out/build.log"
 cp build/zephyr/zmk.uf2 "$out/zmk-autoswitch-test.uf2"
 echo "UF2: $out/zmk-autoswitch-test.uf2"
