@@ -8,8 +8,9 @@ way it does for Logitech Easy-Switch keyboards. Your pairings stay as they are.
 The keyboard speaks the same protocol as those Logitech keyboards: a small part of HID++ 2.0
 (Change Host and Hosts Info), under the keyboard's own USB vendor and product ID.
 
-> **Status:** 2.0 (HID++) is in testing. 1.x (its own protocol over zzeneg/zmk-raw-hid) worked in
-> both directions between Windows and macOS on a nice!nano Reviung41.
+> **Status:** tested on a nice!nano Reviung41 with the AutoSwitch Windows app (Windows to Mac).
+> The macOS app's support for 2.0 is in progress; 1.x (its own protocol over zzeneg/zmk-raw-hid)
+> worked in both directions.
 
 ## How it works
 
@@ -63,7 +64,9 @@ Then open AutoSwitch ▸ Devices and add the keyboard (or reopen its settings): 
 "Switches channel on request" with the number of profiles.
 
 Upgrading from 1.x: remove `zmk-raw-hid` from `west.yml` and the `raw_hid_adapter` shield from
-`build.yaml` (unless something else uses them), then re-pair as in step 4. The marks carry over.
+`build.yaml`, then re-pair as in step 4. The marks carry over. Both modules use the second USB HID
+interface (`HID_1`); to keep raw HID for another tool, set `CONFIG_RAW_HID_DEVICE="HID_2"` and
+`CONFIG_USB_HID_DEVICE_COUNT=3`.
 
 ## Options
 
