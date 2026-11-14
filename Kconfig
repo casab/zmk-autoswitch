@@ -1,21 +1,29 @@
-# AutoSwitch KVM host channel for ZMK (see README.md).
+# AutoSwitch KVM for ZMK (see README.md).
 
 config ZMK_AUTOSWITCH
-    bool "AutoSwitch KVM: let the computer change the Bluetooth profile"
-    depends on RAW_HID
+    bool "AutoSwitch KVM: let the computer change the Bluetooth profile (HID++ Change Host)"
     depends on ZMK_BLE
     depends on SETTINGS
+    depends on !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
     help
-      Lets the AutoSwitch KVM app on the connected computer read and select this keyboard's
-      Bluetooth profile, so the keyboard follows a KVM switch. Needs the zmk-raw-hid module
-      (add the raw_hid_adapter shield).
+      Adds a vendor HID interface that speaks a small HID++ 2.0 subset (Change Host 0x1814,
+      Hosts Info 0x1815), so the AutoSwitch KVM app can read and select this keyboard's
+      Bluetooth profile like it does on a Logitech Easy-Switch keyboard.
 
 if ZMK_AUTOSWITCH
 
 config ZMK_AUTOSWITCH_SELECT_DELAY_MS
-    int "Delay between replying to SELECT and switching the profile (ms)"
+    int "Delay between replying to setCurrentHost and switching the profile (ms)"
     default 100
     help
       The reply has to leave before the connection to the current computer drops.
+
+config ZMK_AUTOSWITCH_USB
+    bool "Also offer the interface over USB"
+    default y
+    depends on ZMK_USB
+
+config USB_HID_DEVICE_COUNT
+    default 2 if ZMK_AUTOSWITCH_USB
 
 endif

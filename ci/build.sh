@@ -7,7 +7,7 @@
 #
 # Environment: WS (west workspace, kept between runs; default .zmk-ws in the repo), CONFIG (a
 # zmk-config "config" directory; default ci/config), BOARD (default nice_nano//zmk), SHIELDS
-# (default "reviung41 raw_hid_adapter"), OUT (output directory; default out/ in the repo).
+# (default "reviung41"), OUT (output directory; default out/ in the repo).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/.." && pwd)"
@@ -21,13 +21,14 @@ west update --fetch-opt=--filter=tree:0 > west-update.log 2>&1 || { tail -30 wes
 west zephyr-export > /dev/null
 west build -s zmk/app -d build -b "${BOARD:-nice_nano//zmk}" -p -- \
   -DZMK_CONFIG="$ws/config" \
-  "-DSHIELD=${SHIELDS:-reviung41 raw_hid_adapter}" \
+  "-DSHIELD=${SHIELDS:-reviung41}" \
   -DZMK_EXTRA_MODULES="$repo" > "$out/build.log" 2>&1 || { tail -60 "$out/build.log"; exit 1; }
-grep -q 'zmk-autoswitch.*autoswitch.c.obj' "$out/build.log" || { echo "the AutoSwitch module wasn't compiled (CONFIG_ZMK_AUTOSWITCH off?)"; exit 1; }
-# Compiler diagnostics in the module's own source only (paths may contain "autoswitch" too).
-if grep -E 'src/autoswitch\.c:[0-9]+:[0-9]+: (warning|error):' "$out/build.log"; then
+grep -q 'as_hidpp.c.obj' "$out/build.log" || { echo "the AutoSwitch module wasn't compiled (CONFIG_ZMK_AUTOSWITCH off?)"; exit 1; }
+# Compiler diagnostics in the module's own sources only (src/as_*.c; paths may contain "autoswitch").
+if grep -E 'src/as_[a-z]+\.c:[0-9]+:[0-9]+: (warning|error):' "$out/build.log"; then
   echo "warnings in the AutoSwitch module"; exit 1
 fi
+grep -q '^CONFIG_USB_HID_DEVICE_COUNT=2' build/zephyr/.config || { echo "CONFIG_USB_HID_DEVICE_COUNT isn't 2"; exit 1; }
 tail -6 "$out/build.log"
 cp build/zephyr/zmk.uf2 "$out/zmk-autoswitch-test.uf2"
 echo "UF2: $out/zmk-autoswitch-test.uf2"

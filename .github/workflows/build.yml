@@ -1,4 +1,4 @@
-# Compile check: builds a test keyboard (nice!nano + Reviung41 + raw_hid_adapter) against ZMK main
+# Compile check: builds a test keyboard (nice!nano + Reviung41) against ZMK main
 # with the module enabled.
 name: Build
 
@@ -22,9 +22,8 @@ jobs:
             .zmk-ws/tools
             .zmk-ws/zephyr
             .zmk-ws/zmk
-            .zmk-ws/zmk-raw-hid
             .zmk-ws/.west
-          key: zmk-ws-${{ hashFiles('ci/config/west.yml') }}
+          key: zmk-ws-v2-${{ hashFiles('ci/config/west.yml') }}
           restore-keys: zmk-ws-
 
       - name: Build
