@@ -6,7 +6,8 @@ computer you're leaving tells the keyboard to switch to the other computer's pro
 way it does for Logitech Easy-Switch keyboards. Your pairings stay as they are.
 
 > **Status:** builds against ZMK `main` (Zephyr 4.1), and the AutoSwitch Windows app supports it.
-> Hardware testing is in progress. The macOS app doesn't support it yet.
+> Tested on a nice!nano Reviung41: Windows to Mac works. The macOS app doesn't support it yet, so
+> switching back from the Mac is still a key press.
 
 ## How it works
 
@@ -18,7 +19,8 @@ way it does for Logitech Easy-Switch keyboards. Your pairings stay as they are.
   as "AutoSwitch runs here". The mark is stored on the keyboard with the profile's pairing and is
   dropped if that profile is later paired with another computer.
 - When the KVM leaves, AutoSwitch sends the keyboard to the other computer's marked profile (or the
-  profile you chose in the device's settings). It never sends it to an empty profile.
+  profile you chose in the device's settings). If no other profile is marked yet and exactly one
+  other profile is paired, it uses that one. It never sends it to an empty profile.
 
 ## Add it to your zmk-config
 
