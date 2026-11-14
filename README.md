@@ -8,9 +8,8 @@ way it does for Logitech Easy-Switch keyboards. Your pairings stay as they are.
 The keyboard speaks the same protocol as those Logitech keyboards: a small part of HID++ 2.0
 (Change Host and Hosts Info), under the keyboard's own USB vendor and product ID.
 
-> **Status:** tested on a nice!nano Reviung41 with the AutoSwitch Windows app (Windows to Mac).
-> The macOS app's support for 2.0 is in progress; 1.x (its own protocol over zzeneg/zmk-raw-hid)
-> worked in both directions.
+> **Status:** works with the AutoSwitch KVM apps for Windows and macOS (v0.4.0 and later), tested
+> on a nice!nano Reviung41 between a Windows PC and a Mac.
 
 ## How it works
 
